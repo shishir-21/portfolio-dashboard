@@ -1,7 +1,9 @@
+import HoldingsTable from "./components/HoldingsTable";
 import {
   getPortfolioSummary,
   getSectorSummary,
   getPortfolioPerformance,
+  getPortfolio,
 } from "../lib/api";
 
 export default async function Home() {
@@ -9,17 +11,19 @@ export default async function Home() {
     summaryResponse,
     sectorResponse,
     performanceResponse,
+    portfolioResponse,
   ] = await Promise.all([
     getPortfolioSummary(),
     getSectorSummary(),
     getPortfolioPerformance(),
+    getPortfolio(),
   ]);
 
   const summary = summaryResponse.data;
   const sectors = sectorResponse.data;
   const performance = performanceResponse.data;
+  const portfolio = portfolioResponse.data;
 
-  console.log("Portfolio performance:", performance);
 
   return (
     <main className="dashboard">
@@ -195,6 +199,9 @@ export default async function Home() {
           </div>
         </div>
       </section>
+
+      <HoldingsTable portfolio={portfolio} />
+
     </main>
   );
 }
