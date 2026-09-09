@@ -123,3 +123,55 @@ export function getSectorSummary(_req: Request, res: Response) {
     });
   }
 }
+
+export function getPortfolioPerformance(_req: Request, res: Response) {
+  try {
+    const portfolio = readPortfolioExcel();
+
+    const activePortfolio = portfolio
+      .filter(
+        (stock) =>
+          stock.status === "active" &&
+          stock.gainLossPercent !== null
+      )
+      .map((stock) => ({
+        name: stock.name,
+        sector: stock.sector,
+        cmp: stock.cmp,
+        presentValue: stock.presentValue,
+        gainLoss: stock.gainLoss,
+        gainLossPercent: stock.gainLossPercent,
+      }));
+
+    const sorted = [...activePortfolio].sort(
+      (a, b) =>
+        (b.gainLossPercent ?? 0) -
+        (a.gainLossPercent ?? 0)
+    );
+
+    const topGainers = sorted.slice(0, 5);
+
+    const topLosers = [...activePortfolio]
+      .sort(
+        (a, b) =>
+          (a.gainLossPercent ?? 0) -
+          (b.gainLossPercent ?? 0)
+      )
+      .slice(0, 5);
+
+    res.json({
+      success: true,
+      data: {
+        topGainers,
+        topLosers,
+      },
+    });
+  } catch (error) {
+    console.error("Failed to calculate portfolio performance:", error);
+
+    res.status(500).json({
+      success: false,
+      message: "Failed to calculate portfolio performance",
+    });
+  }
+}
