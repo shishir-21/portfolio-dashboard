@@ -1,5 +1,5 @@
 import express from "express";
-import { readPortfolioExcel } from "./services/excel.service";
+import portfolioRoutes from "./routes/portfolio.routes";
 
 const app = express();
 
@@ -12,24 +12,7 @@ app.get("/api/health", (_req, res) => {
   });
 });
 
-app.get("/api/portfolio/test", (_req, res) => {
-  try {
-    const data = readPortfolioExcel();
-
-    res.json({
-      success: true,
-      count: data.length,
-      data: data.slice(0, 5),
-    });
-  } catch (error) {
-    console.error(error);
-
-    res.status(500).json({
-      success: false,
-      message: "Failed to read portfolio Excel file",
-    });
-  }
-});
+app.use("/api/portfolio", portfolioRoutes);
 
 const PORT = process.env.PORT || 5000;
 
