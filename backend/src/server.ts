@@ -1,8 +1,10 @@
 import express from "express";
+import cors from "cors";
 import portfolioRoutes from "./routes/portfolio.routes";
 
 const app = express();
 
+app.use(cors());
 app.use(express.json());
 
 app.get("/api/health", (_req, res) => {
