@@ -1,16 +1,25 @@
 import {
   getPortfolioSummary,
   getSectorSummary,
+  getPortfolioPerformance,
 } from "../lib/api";
 
 export default async function Home() {
-  const [summaryResponse, sectorResponse] = await Promise.all([
+  const [
+    summaryResponse,
+    sectorResponse,
+    performanceResponse,
+  ] = await Promise.all([
     getPortfolioSummary(),
     getSectorSummary(),
+    getPortfolioPerformance(),
   ]);
 
   const summary = summaryResponse.data;
   const sectors = sectorResponse.data;
+  const performance = performanceResponse.data;
+
+  console.log("Portfolio performance:", performance);
 
   return (
     <main className="dashboard">
@@ -104,6 +113,86 @@ export default async function Home() {
               </div>
             )
           )}
+        </div>
+      </section>
+
+      <section className="performance-section">
+        <div className="section-header">
+          <div>
+            <p className="eyebrow">PERFORMANCE</p>
+            <h2>Top Gainers & Losers</h2>
+          </div>
+          <p className="section-description">
+            Best and worst performing holdings
+          </p>
+        </div>
+
+        <div className="performance-grid">
+          <div className="performance-card">
+            <div className="performance-card-header">
+              <h3>Top Gainers</h3>
+              <span className="performance-label positive">Gainers</span>
+            </div>
+
+            <div className="performance-list">
+              {performance.topGainers.map(
+                (stock: {
+                  name: string;
+                  gainLossPercent: number;
+                  gainLoss: number;
+                }) => (
+                  <div className="performance-row" key={stock.name}>
+                    <div>
+                      <p className="performance-name">{stock.name}</p>
+                      <p className="performance-gain">
+                        +₹
+                        {stock.gainLoss.toLocaleString("en-IN", {
+                          maximumFractionDigits: 2,
+                        })}
+                      </p>
+                    </div>
+
+                    <span className="performance-percent positive">
+                      +{(stock.gainLossPercent * 100).toFixed(2)}%
+                    </span>
+                  </div>
+                )
+              )}
+            </div>
+          </div>
+
+          <div className="performance-card">
+            <div className="performance-card-header">
+              <h3>Top Losers</h3>
+              <span className="performance-label negative">Losers</span>
+            </div>
+
+            <div className="performance-list">
+              {performance.topLosers.map(
+                (stock: {
+                  name: string;
+                  gainLossPercent: number;
+                  gainLoss: number;
+                }) => (
+                  <div className="performance-row" key={stock.name}>
+                    <div>
+                      <p className="performance-name">{stock.name}</p>
+                      <p className="performance-loss">
+                        ₹
+                        {stock.gainLoss.toLocaleString("en-IN", {
+                          maximumFractionDigits: 2,
+                        })}
+                      </p>
+                    </div>
+
+                    <span className="performance-percent negative">
+                      {(stock.gainLossPercent * 100).toFixed(2)}%
+                    </span>
+                  </div>
+                )
+              )}
+            </div>
+          </div>
         </div>
       </section>
     </main>

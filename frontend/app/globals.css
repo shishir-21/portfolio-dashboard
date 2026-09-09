@@ -192,3 +192,97 @@ body {
     gap: 8px;
   }
 }
+
+.performance-section {
+  margin-top: 32px;
+  padding-bottom: 48px;
+}
+
+.performance-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+
+.performance-card {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.04);
+}
+
+.performance-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.performance-card-header h3 {
+  margin: 0;
+  font-size: 18px;
+  color: #111827;
+}
+
+.performance-label {
+  font-size: 12px;
+  font-weight: 700;
+  padding: 6px 10px;
+  border-radius: 999px;
+}
+
+.performance-label.positive {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.performance-label.negative {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.performance-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.performance-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 0;
+  border-top: 1px solid #f0f2f5;
+}
+
+.performance-name {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.performance-gain,
+.performance-loss {
+  margin: 5px 0 0;
+  font-size: 12px;
+}
+
+.performance-gain {
+  color: #15803d;
+}
+
+.performance-loss {
+  color: #dc2626;
+}
+
+.performance-percent {
+  font-size: 14px;
+  font-weight: 700;
+}
+
+@media (max-width: 800px) {
+  .performance-grid {
+    grid-template-columns: 1fr;
+  }
+}
