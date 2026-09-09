@@ -1,8 +1,16 @@
-import { getPortfolioSummary } from "../lib/api";
+import {
+  getPortfolioSummary,
+  getSectorSummary,
+} from "../lib/api";
 
 export default async function Home() {
-  const response = await getPortfolioSummary();
-  const summary = response.data;
+  const [summaryResponse, sectorResponse] = await Promise.all([
+    getPortfolioSummary(),
+    getSectorSummary(),
+  ]);
+
+  const summary = summaryResponse.data;
+  const sectors = sectorResponse.data;
 
   return (
     <main className="dashboard">
@@ -48,6 +56,56 @@ export default async function Home() {
           value={summary.totalHoldings.toString()}
         />
       </section>
+
+      <section className="sector-section">
+        <div className="section-header">
+          <div>
+            <p className="eyebrow">ALLOCATION</p>
+            <h2>Sector Allocation</h2>
+          </div>
+          <p className="section-description">
+            Portfolio distribution by sector
+          </p>
+        </div>
+
+        <div className="sector-list">
+          {sectors.map(
+            (sector: {
+              sector: string;
+              investment: number;
+              presentValue: number;
+              percentage: number;
+            }) => (
+              <div className="sector-row" key={sector.sector}>
+                <div className="sector-info">
+                  <div>
+                    <p className="sector-name">{sector.sector}</p>
+                    <p className="sector-value">
+                      ₹
+                      {sector.presentValue.toLocaleString("en-IN", {
+                        maximumFractionDigits: 2,
+                      })}
+                    </p>
+                  </div>
+
+                  <span className="sector-percentage">
+                    {sector.percentage.toFixed(2)}%
+                  </span>
+                </div>
+
+                <div className="sector-bar-background">
+                  <div
+                    className="sector-bar"
+                    style={{
+                      width: `${sector.percentage}%`,
+                    }}
+                  />
+                </div>
+              </div>
+            )
+          )}
+        </div>
+      </section>
     </main>
   );
 }
@@ -67,7 +125,11 @@ function SummaryCard({
       <p className="card-value">{value}</p>
 
       {positive !== undefined && (
-        <p className={positive ? "card-status positive" : "card-status negative"}>
+        <p
+          className={
+            positive ? "card-status positive" : "card-status negative"
+          }
+        >
           {positive ? "Positive performance" : "Negative performance"}
         </p>
       )}

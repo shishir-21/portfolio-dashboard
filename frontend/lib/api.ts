@@ -9,3 +9,13 @@ export async function getPortfolioSummary() {
 
   return response.json();
 }
+
+export async function getSectorSummary() {
+  const response = await fetch(`${API_BASE_URL}/portfolio/sectors`);
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch sector summary");
+  }
+
+  return response.json();
+}
