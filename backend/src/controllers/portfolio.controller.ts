@@ -64,3 +64,62 @@ export function getPortfolioSummary(_req: Request, res: Response) {
     });
   }
 }
+
+export function getSectorSummary(_req: Request, res: Response) {
+  try {
+    const portfolio = readPortfolioExcel();
+
+    const activePortfolio = portfolio.filter(
+      (stock) => stock.status === "active"
+    );
+
+    const sectorMap = new Map<
+      string,
+      {
+        investment: number;
+        presentValue: number;
+      }
+    >();
+
+    for (const stock of activePortfolio) {
+      const current = sectorMap.get(stock.sector) ?? {
+        investment: 0,
+        presentValue: 0,
+      };
+
+      current.investment += stock.investment ?? 0;
+      current.presentValue += stock.presentValue ?? 0;
+
+      sectorMap.set(stock.sector, current);
+    }
+
+    const totalInvestment = activePortfolio.reduce(
+      (total, stock) => total + (stock.investment ?? 0),
+      0
+    );
+
+    const data = Array.from(sectorMap.entries()).map(
+      ([sector, values]) => ({
+        sector,
+        investment: values.investment,
+        presentValue: values.presentValue,
+        percentage:
+          totalInvestment > 0
+            ? (values.investment / totalInvestment) * 100
+            : 0,
+      })
+    );
+
+    res.json({
+      success: true,
+      data,
+    });
+  } catch (error) {
+    console.error("Failed to calculate sector summary:", error);
+
+    res.status(500).json({
+      success: false,
+      message: "Failed to calculate sector summary",
+    });
+  }
+}
