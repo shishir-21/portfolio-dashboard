@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import StockDetails from "./StockDetails";
 
 interface PortfolioStock {
@@ -407,6 +407,20 @@ function HoldingsDataTable({
     stocks: PortfolioStock[];
     onStockClick: (stock: PortfolioStock) => void;
 }) {
+    const [currentPage, setCurrentPage] = useState(1);
+
+    const rowsPerPage = 10;
+
+    const totalPages = Math.ceil(stocks.length / rowsPerPage);
+
+    const paginatedStocks = stocks.slice(
+        (currentPage - 1) * rowsPerPage,
+        currentPage * rowsPerPage
+    );
+
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [stocks]);
     return (
         <div className="sector-table-wrapper">
             <table className="holdings-table">
@@ -421,7 +435,7 @@ function HoldingsDataTable({
                 </thead>
 
                 <tbody>
-                    {stocks.map((stock) => (
+                    {paginatedStocks.map((stock) => (
                         <tr key={`${stock.name}-${stock.no}`}>
                             <td>
                                 <button
@@ -479,6 +493,36 @@ function HoldingsDataTable({
                     ))}
                 </tbody>
             </table>
+
+            {totalPages > 1 && (
+                <div className="pagination">
+                    <button
+                        type="button"
+                        className="pagination-button"
+                        disabled={currentPage === 1}
+                        onClick={() =>
+                            setCurrentPage((page) => page - 1)
+                        }
+                    >
+                        Previous
+                    </button>
+
+                    <span className="pagination-info">
+                        Page {currentPage} of {totalPages}
+                    </span>
+
+                    <button
+                        type="button"
+                        className="pagination-button"
+                        disabled={currentPage === totalPages}
+                        onClick={() =>
+                            setCurrentPage((page) => page + 1)
+                        }
+                    >
+                        Next
+                    </button>
+                </div>
+            )}
         </div>
     );
 }
