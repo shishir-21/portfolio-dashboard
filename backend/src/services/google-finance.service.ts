@@ -44,7 +44,7 @@ function extractMetric(
         return null;
     }
 
-    return parseNumber(match[1]);
+    return parseNumber(match[1] || "");
 }
 
 export async function fetchGoogleFinanceData(

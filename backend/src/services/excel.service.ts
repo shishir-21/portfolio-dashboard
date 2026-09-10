@@ -64,7 +64,9 @@ export function readPortfolioExcel(): PortfolioStock[] {
   const workbook = XLSX.readFile(excelPath);
 
   const sheetName = workbook.SheetNames[0];
+  if (!sheetName) throw new Error("No sheet found in Excel");
   const worksheet = workbook.Sheets[sheetName];
+  if (!worksheet) throw new Error("Worksheet not found");
 
   const rows = XLSX.utils.sheet_to_json<unknown[]>(worksheet, {
     header: 1,
@@ -80,6 +82,7 @@ export function readPortfolioExcel(): PortfolioStock[] {
   // Data starts from row 2
   for (let i = 2; i < rows.length; i++) {
     const row = rows[i];
+    if (!row) continue;
 
     const no = toNumber(row[0]);
     const particulars = toStringValue(row[1]);

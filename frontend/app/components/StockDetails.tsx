@@ -1,10 +1,10 @@
-﻿"use client";
+"use client";
 
 import { useEffect } from "react";
 
 type Stock = {
     name: string;
-    symbol: string;
+    symbol: string | null;
     purchasePrice: number | null;
     quantity: number | null;
     investment: number | null;
@@ -144,7 +144,11 @@ export default function StockDetails({
 
                             <DetailItem
                                 label="Return"
-                                value={formatPercent(stock.gainLossPercent)}
+                                value={
+                                    stock.gainLossPercent !== null
+                                        ? `${stock.gainLossPercent >= 0 ? "+" : ""}${stock.gainLossPercent.toFixed(2)}%`
+                                        : "-"
+                                }
                                 valueClass={
                                     isPositive
                                         ? "table-positive"
@@ -185,7 +189,7 @@ export default function StockDetails({
                             />
 
                             <DetailItem
-                                label="Latest Earnings"
+                                label="Latest Earnings (EPS)"
                                 value={formatNumber(stock.latestEarnings)}
                             />
 
