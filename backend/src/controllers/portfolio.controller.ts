@@ -1,69 +1,108 @@
 import { Request, Response } from "express";
 import { readPortfolioExcel } from "../services/excel.service";
 import { fetchYahooCMP } from "../services/yahoo.service";
+import { fetchGoogleFinanceData } from "../services/google-finance.service";
 
 export async function getPortfolio(req: Request, res: Response) {
     try {
         const portfolio = readPortfolioExcel();
 
-        const portfolioWithLiveCMP = await Promise.all(
+        const portfolioWithLiveData = await Promise.all(
             portfolio.map(async (stock) => {
                 if (!stock.symbol || !stock.exchange) {
                     return stock;
                 }
 
-                const liveCMP = await fetchYahooCMP(
-                    stock.symbol,
-                    stock.exchange
-                );
+                const [liveCMP, googleFinanceData] =
+                    await Promise.all([
+                        fetchYahooCMP(
+                            stock.symbol,
+                            stock.exchange
+                        ),
+                        fetchGoogleFinanceData(
+                            stock.symbol,
+                            stock.exchange
+                        ),
+                    ]);
 
-                if (liveCMP === null) {
-                    return stock;
+                let updatedStock = {
+                    ...stock,
+                };
+
+                // Update live CMP and portfolio calculations
+                if (liveCMP !== null) {
+                    const presentValue =
+                        liveCMP * (stock.quantity ?? 0);
+
+                    const gainLoss =
+                        presentValue -
+                        (stock.investment ?? 0);
+
+                    const gainLossPercent =
+                        stock.investment &&
+                        stock.investment > 0
+                            ? (gainLoss / stock.investment) * 100
+                            : null;
+
+                    updatedStock = {
+                        ...updatedStock,
+                        cmp: liveCMP,
+                        presentValue,
+                        gainLoss,
+                        gainLossPercent,
+                    };
                 }
 
-                const presentValue =
-                    liveCMP * (stock.quantity ?? 0);
+                // Update Google Finance fundamentals
+                if (googleFinanceData.pe !== null) {
+                    updatedStock.pe = googleFinanceData.pe;
+                }
 
-                const gainLoss =
-                    presentValue - (stock.investment ?? 0);
+                if (
+                    googleFinanceData.latestEarnings !== null
+                ) {
+                    updatedStock.latestEarnings =
+                        googleFinanceData.latestEarnings;
+                }
 
-                const gainLossPercent =
-                    stock.investment && stock.investment > 0
-                        ? (gainLoss / stock.investment) * 100
-                        : null;
-
-                return {
-                    ...stock,
-                    cmp: liveCMP,
-                    presentValue,
-                    gainLoss,
-                    gainLossPercent,
-                };
+                return updatedStock;
             })
         );
 
         const { sector, status, stage2 } = req.query;
 
-        let filteredPortfolio = portfolioWithLiveCMP;
+        let filteredPortfolio = portfolioWithLiveData;
 
-        if (typeof sector === "string" && sector.trim() !== "") {
+        if (
+            typeof sector === "string" &&
+            sector.trim() !== ""
+        ) {
             filteredPortfolio = filteredPortfolio.filter(
                 (stock) =>
-                    stock.sector.toLowerCase() === sector.trim().toLowerCase()
+                    stock.sector.toLowerCase() ===
+                    sector.trim().toLowerCase()
             );
         }
 
-        if (typeof status === "string" && status.trim() !== "") {
+        if (
+            typeof status === "string" &&
+            status.trim() !== ""
+        ) {
             filteredPortfolio = filteredPortfolio.filter(
                 (stock) =>
-                    stock.status.toLowerCase() === status.trim().toLowerCase()
+                    stock.status.toLowerCase() ===
+                    status.trim().toLowerCase()
             );
         }
 
-        if (typeof stage2 === "string" && stage2.trim() !== "") {
+        if (
+            typeof stage2 === "string" &&
+            stage2.trim() !== ""
+        ) {
             filteredPortfolio = filteredPortfolio.filter(
                 (stock) =>
-                    stock.stage2?.toLowerCase() === stage2.trim().toLowerCase()
+                    stock.stage2?.toLowerCase() ===
+                    stage2.trim().toLowerCase()
             );
         }
 
@@ -71,14 +110,26 @@ export async function getPortfolio(req: Request, res: Response) {
             success: true,
             count: filteredPortfolio.length,
             filters: {
-                sector: typeof sector === "string" ? sector : null,
-                status: typeof status === "string" ? status : null,
-                stage2: typeof stage2 === "string" ? stage2 : null,
+                sector:
+                    typeof sector === "string"
+                        ? sector
+                        : null,
+                status:
+                    typeof status === "string"
+                        ? status
+                        : null,
+                stage2:
+                    typeof stage2 === "string"
+                        ? stage2
+                        : null,
             },
             data: filteredPortfolio,
         });
     } catch (error) {
-        console.error("Failed to load portfolio:", error);
+        console.error(
+            "Failed to load portfolio:",
+            error
+        );
 
         res.status(500).json({
             success: false,
@@ -87,7 +138,10 @@ export async function getPortfolio(req: Request, res: Response) {
     }
 }
 
-export function getPortfolioSummary(_req: Request, res: Response) {
+export function getPortfolioSummary(
+    _req: Request,
+    res: Response
+) {
     try {
         const portfolio = readPortfolioExcel();
 
@@ -96,16 +150,19 @@ export function getPortfolioSummary(_req: Request, res: Response) {
         );
 
         const totalInvestment = activePortfolio.reduce(
-            (total, stock) => total + (stock.investment ?? 0),
+            (total, stock) =>
+                total + (stock.investment ?? 0),
             0
         );
 
         const presentValue = activePortfolio.reduce(
-            (total, stock) => total + (stock.presentValue ?? 0),
+            (total, stock) =>
+                total + (stock.presentValue ?? 0),
             0
         );
 
-        const totalGainLoss = presentValue - totalInvestment;
+        const totalGainLoss =
+            presentValue - totalInvestment;
 
         const gainLossPercent =
             totalInvestment > 0
@@ -123,7 +180,10 @@ export function getPortfolioSummary(_req: Request, res: Response) {
             },
         });
     } catch (error) {
-        console.error("Failed to calculate portfolio summary:", error);
+        console.error(
+            "Failed to calculate portfolio summary:",
+            error
+        );
 
         res.status(500).json({
             success: false,
@@ -132,7 +192,10 @@ export function getPortfolioSummary(_req: Request, res: Response) {
     }
 }
 
-export function getSectorSummary(_req: Request, res: Response) {
+export function getSectorSummary(
+    _req: Request,
+    res: Response
+) {
     try {
         const portfolio = readPortfolioExcel();
 
@@ -149,40 +212,51 @@ export function getSectorSummary(_req: Request, res: Response) {
         >();
 
         for (const stock of activePortfolio) {
-            const current = sectorMap.get(stock.sector) ?? {
-                investment: 0,
-                presentValue: 0,
-            };
+            const current =
+                sectorMap.get(stock.sector) ?? {
+                    investment: 0,
+                    presentValue: 0,
+                };
 
-            current.investment += stock.investment ?? 0;
-            current.presentValue += stock.presentValue ?? 0;
+            current.investment +=
+                stock.investment ?? 0;
+
+            current.presentValue +=
+                stock.presentValue ?? 0;
 
             sectorMap.set(stock.sector, current);
         }
 
-        const totalInvestment = activePortfolio.reduce(
-            (total, stock) => total + (stock.investment ?? 0),
-            0
-        );
+        const totalInvestment =
+            activePortfolio.reduce(
+                (total, stock) =>
+                    total + (stock.investment ?? 0),
+                0
+            );
 
-        const data = Array.from(sectorMap.entries()).map(
-            ([sector, values]) => ({
-                sector,
-                investment: values.investment,
-                presentValue: values.presentValue,
-                percentage:
-                    totalInvestment > 0
-                        ? (values.investment / totalInvestment) * 100
-                        : 0,
-            })
-        );
+        const data = Array.from(
+            sectorMap.entries()
+        ).map(([sector, values]) => ({
+            sector,
+            investment: values.investment,
+            presentValue: values.presentValue,
+            percentage:
+                totalInvestment > 0
+                    ? (values.investment /
+                          totalInvestment) *
+                      100
+                    : 0,
+        }));
 
         res.json({
             success: true,
             data,
         });
     } catch (error) {
-        console.error("Failed to calculate sector summary:", error);
+        console.error(
+            "Failed to calculate sector summary:",
+            error
+        );
 
         res.status(500).json({
             success: false,
@@ -191,7 +265,10 @@ export function getSectorSummary(_req: Request, res: Response) {
     }
 }
 
-export function getPortfolioPerformance(_req: Request, res: Response) {
+export function getPortfolioPerformance(
+    _req: Request,
+    res: Response
+) {
     try {
         const portfolio = readPortfolioExcel();
 
@@ -207,7 +284,8 @@ export function getPortfolioPerformance(_req: Request, res: Response) {
                 cmp: stock.cmp,
                 presentValue: stock.presentValue,
                 gainLoss: stock.gainLoss,
-                gainLossPercent: stock.gainLossPercent,
+                gainLossPercent:
+                    stock.gainLossPercent,
             }));
 
         const sorted = [...activePortfolio].sort(
@@ -234,11 +312,15 @@ export function getPortfolioPerformance(_req: Request, res: Response) {
             },
         });
     } catch (error) {
-        console.error("Failed to calculate portfolio performance:", error);
+        console.error(
+            "Failed to calculate portfolio performance:",
+            error
+        );
 
         res.status(500).json({
             success: false,
-            message: "Failed to calculate portfolio performance",
+            message:
+                "Failed to calculate portfolio performance",
         });
     }
 }
