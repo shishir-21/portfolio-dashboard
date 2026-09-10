@@ -8,8 +8,18 @@ async function test() {
       exchange: "NSE" as const,
     },
     {
-      name: "KPIT Tech",
-      symbol: "KPITTECH",
+      name: "LTI Mindtree",
+      symbol: "LTIM",
+      exchange: "NSE" as const,
+    },
+    {
+      name: "Bajaj Finance",
+      symbol: "BAJFINANCE",
+      exchange: "NSE" as const,
+    },
+    {
+      name: "Tata Power",
+      symbol: "TATAPOWER",
       exchange: "NSE" as const,
     },
     {

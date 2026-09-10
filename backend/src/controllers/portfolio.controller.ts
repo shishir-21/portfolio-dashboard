@@ -25,14 +25,26 @@ export async function getPortfolio(req: Request, res: Response) {
                         ),
                     ]);
 
+                // Use Yahoo CMP when available.
+                // Otherwise, keep the CMP from Excel.
+                const effectiveCMP =
+                    liveCMP !== null
+                        ? liveCMP
+                        : stock.cmp;
+
                 let updatedStock = {
                     ...stock,
+                    cmpSource:
+                        liveCMP !== null
+                            ? "yahoo"
+                            : "excel",
                 };
 
-                // Update live CMP and portfolio calculations
-                if (liveCMP !== null) {
+                // Update portfolio calculations using
+                // live Yahoo CMP or Excel fallback CMP.
+                if (effectiveCMP !== null) {
                     const presentValue =
-                        liveCMP * (stock.quantity ?? 0);
+                        effectiveCMP * (stock.quantity ?? 0);
 
                     const gainLoss =
                         presentValue -
@@ -40,13 +52,13 @@ export async function getPortfolio(req: Request, res: Response) {
 
                     const gainLossPercent =
                         stock.investment &&
-                        stock.investment > 0
+                            stock.investment > 0
                             ? (gainLoss / stock.investment) * 100
                             : null;
 
                     updatedStock = {
                         ...updatedStock,
-                        cmp: liveCMP,
+                        cmp: effectiveCMP,
                         presentValue,
                         gainLoss,
                         gainLossPercent,
@@ -55,7 +67,8 @@ export async function getPortfolio(req: Request, res: Response) {
 
                 // Update Google Finance fundamentals
                 if (googleFinanceData.pe !== null) {
-                    updatedStock.pe = googleFinanceData.pe;
+                    updatedStock.pe =
+                        googleFinanceData.pe;
                 }
 
                 if (
@@ -243,8 +256,8 @@ export function getSectorSummary(
             percentage:
                 totalInvestment > 0
                     ? (values.investment /
-                          totalInvestment) *
-                      100
+                        totalInvestment) *
+                    100
                     : 0,
         }));
 
