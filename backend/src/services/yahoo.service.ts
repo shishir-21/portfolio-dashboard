@@ -20,13 +20,18 @@ const cache = new Map<string, CachedCMP>();
 
 const CACHE_TTL_MS = 30 * 1000;
 
+const YAHOO_SYMBOL_MAP: Record<string, string> = {
+    "LTIM": "LTM",
+};
+
 function getYahooSymbol(
     symbol: string,
     exchange: "NSE" | "BSE"
 ): string {
+    const mappedSymbol = YAHOO_SYMBOL_MAP[symbol] || symbol;
     return exchange === "NSE"
-        ? `${symbol}.NS`
-        : `${symbol}.BO`;
+        ? `${mappedSymbol}.NS`
+        : `${mappedSymbol}.BO`;
 }
 
 export async function fetchYahooCMP(
