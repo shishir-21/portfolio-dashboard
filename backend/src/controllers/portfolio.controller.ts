@@ -1,122 +1,58 @@
 import { Request, Response } from "express";
 import { readPortfolioExcel } from "../services/excel.service";
-import { fetchYahooCMP } from "../services/yahoo.service";
-import { fetchGoogleFinanceData } from "../services/google-finance.service";
+import { getLivePortfolio } from "../services/live-portfolio.service";
 
 export async function getPortfolio(req: Request, res: Response) {
     try {
-        const portfolio = readPortfolioExcel();
-
-        const portfolioWithLiveData = await Promise.all(
-            portfolio.map(async (stock) => {
-                if (!stock.symbol || !stock.exchange) {
-                    return stock;
-                }
-
-                const [liveCMP, googleFinanceData] =
-                    await Promise.all([
-                        fetchYahooCMP(
-                            stock.symbol,
-                            stock.exchange
-                        ),
-                        fetchGoogleFinanceData(
-                            stock.symbol,
-                            stock.exchange
-                        ),
-                    ]);
-
-                // Use Yahoo CMP when available.
-                // Otherwise, keep the CMP from Excel.
-                const effectiveCMP =
-                    liveCMP !== null
-                        ? liveCMP
-                        : stock.cmp;
-
-                let updatedStock = {
-                    ...stock,
-                    cmpSource:
-                        liveCMP !== null
-                            ? "yahoo"
-                            : "excel",
-                };
-
-                // Update portfolio calculations using
-                // live Yahoo CMP or Excel fallback CMP.
-                if (effectiveCMP !== null) {
-                    const presentValue =
-                        effectiveCMP * (stock.quantity ?? 0);
-
-                    const gainLoss =
-                        presentValue -
-                        (stock.investment ?? 0);
-
-                    const gainLossPercent =
-                        stock.investment &&
-                            stock.investment > 0
-                            ? (gainLoss / stock.investment) * 100
-                            : null;
-
-                    updatedStock = {
-                        ...updatedStock,
-                        cmp: effectiveCMP,
-                        presentValue,
-                        gainLoss,
-                        gainLossPercent,
-                    };
-                }
-
-                // Update Google Finance fundamentals
-                if (googleFinanceData.pe !== null) {
-                    updatedStock.pe =
-                        googleFinanceData.pe;
-                }
-
-                if (
-                    googleFinanceData.latestEarnings !== null
-                ) {
-                    updatedStock.latestEarnings =
-                        googleFinanceData.latestEarnings;
-                }
-
-                return updatedStock;
-            })
-        );
+        const portfolioWithLiveData =
+            await getLivePortfolio(true);
 
         const { sector, status, stage2 } = req.query;
 
-        let filteredPortfolio = portfolioWithLiveData;
+        let filteredPortfolio =
+            portfolioWithLiveData;
 
         if (
             typeof sector === "string" &&
             sector.trim() !== ""
         ) {
-            filteredPortfolio = filteredPortfolio.filter(
-                (stock) =>
-                    stock.sector.toLowerCase() ===
-                    sector.trim().toLowerCase()
-            );
+            filteredPortfolio =
+                filteredPortfolio.filter(
+                    (stock) =>
+                        stock.sector.toLowerCase() ===
+                        sector
+                            .trim()
+                            .toLowerCase()
+                );
         }
 
         if (
             typeof status === "string" &&
             status.trim() !== ""
         ) {
-            filteredPortfolio = filteredPortfolio.filter(
-                (stock) =>
-                    stock.status.toLowerCase() ===
-                    status.trim().toLowerCase()
-            );
+            filteredPortfolio =
+                filteredPortfolio.filter(
+                    (stock) =>
+                        stock.status.toLowerCase() ===
+                        status
+                            .trim()
+                            .toLowerCase()
+                );
         }
 
         if (
             typeof stage2 === "string" &&
             stage2.trim() !== ""
         ) {
-            filteredPortfolio = filteredPortfolio.filter(
-                (stock) =>
-                    stock.stage2?.toLowerCase() ===
-                    stage2.trim().toLowerCase()
-            );
+            filteredPortfolio =
+                filteredPortfolio.filter(
+                    (stock) =>
+                        stock.stage2
+                            ?.toLowerCase() ===
+                        stage2
+                            .trim()
+                            .toLowerCase()
+                );
         }
 
         res.json({
@@ -151,12 +87,12 @@ export async function getPortfolio(req: Request, res: Response) {
     }
 }
 
-export function getPortfolioSummary(
+export async function getPortfolioSummary(
     _req: Request,
     res: Response
 ) {
     try {
-        const portfolio = readPortfolioExcel();
+        const portfolio = await getLivePortfolio();
 
         const activePortfolio = portfolio.filter(
             (stock) => stock.status === "active"
@@ -205,12 +141,12 @@ export function getPortfolioSummary(
     }
 }
 
-export function getSectorSummary(
+export async function getSectorSummary(
     _req: Request,
     res: Response
 ) {
     try {
-        const portfolio = readPortfolioExcel();
+        const portfolio = await getLivePortfolio();
 
         const activePortfolio = portfolio.filter(
             (stock) => stock.status === "active"
@@ -278,12 +214,12 @@ export function getSectorSummary(
     }
 }
 
-export function getPortfolioPerformance(
+export async function getPortfolioPerformance(
     _req: Request,
     res: Response
 ) {
     try {
-        const portfolio = readPortfolioExcel();
+        const portfolio = await getLivePortfolio();
 
         const activePortfolio = portfolio
             .filter(
