@@ -1,13 +1,50 @@
 import { Request, Response } from "express";
 import { readPortfolioExcel } from "../services/excel.service";
+import { fetchYahooCMP } from "../services/yahoo.service";
 
-export function getPortfolio(req: Request, res: Response) {
+export async function getPortfolio(req: Request, res: Response) {
     try {
         const portfolio = readPortfolioExcel();
 
+        const portfolioWithLiveCMP = await Promise.all(
+            portfolio.map(async (stock) => {
+                if (!stock.symbol || !stock.exchange) {
+                    return stock;
+                }
+
+                const liveCMP = await fetchYahooCMP(
+                    stock.symbol,
+                    stock.exchange
+                );
+
+                if (liveCMP === null) {
+                    return stock;
+                }
+
+                const presentValue =
+                    liveCMP * (stock.quantity ?? 0);
+
+                const gainLoss =
+                    presentValue - (stock.investment ?? 0);
+
+                const gainLossPercent =
+                    stock.investment && stock.investment > 0
+                        ? (gainLoss / stock.investment) * 100
+                        : null;
+
+                return {
+                    ...stock,
+                    cmp: liveCMP,
+                    presentValue,
+                    gainLoss,
+                    gainLossPercent,
+                };
+            })
+        );
+
         const { sector, status, stage2 } = req.query;
 
-        let filteredPortfolio = portfolio;
+        let filteredPortfolio = portfolioWithLiveCMP;
 
         if (typeof sector === "string" && sector.trim() !== "") {
             filteredPortfolio = filteredPortfolio.filter(
