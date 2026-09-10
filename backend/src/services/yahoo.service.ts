@@ -70,10 +70,14 @@ export async function fetchYahooCMP(
 
     return cmp;
   } catch (error) {
-    console.error(
-      `Failed to fetch Yahoo CMP for ${yahooSymbol}:`,
-      error
+    console.warn(
+      `Yahoo CMP unavailable for ${yahooSymbol}. Using Excel fallback.`
     );
+
+    cache.set(yahooSymbol, {
+      value: null,
+      expiresAt: Date.now() + CACHE_TTL_MS,
+    });
 
     return null;
   }
