@@ -170,6 +170,11 @@ export default function StockDetails({
                                         ? "Sold"
                                         : "Active"
                                 }
+                                valueClass={
+                                    stock.status === "sold"
+                                        ? "table-negative"
+                                        : "table-positive"
+                                }
                             />
                         </div>
                     </section>

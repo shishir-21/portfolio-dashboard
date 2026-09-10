@@ -423,21 +423,17 @@ function SummaryCard({
     <div className="summary-card">
       <p className="card-title">{title}</p>
 
-      <p className="card-value">{value}</p>
-
-      {positive !== undefined && (
-        <p
-          className={
-            positive
-              ? "card-status positive"
-              : "card-status negative"
-          }
-        >
-          {positive
-            ? "Positive performance"
-            : "Negative performance"}
-        </p>
-      )}
+      <p 
+        className={
+          positive !== undefined
+            ? positive
+              ? "card-value positive"
+              : "card-value negative"
+            : "card-value"
+        }
+      >
+        {value}
+      </p>
     </div>
   );
 }
