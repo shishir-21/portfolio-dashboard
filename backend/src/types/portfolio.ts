@@ -9,6 +9,8 @@ export interface PortfolioStock {
   portfolioPercent: number | null;
 
   symbol: string | null;
+  exchange: "NSE" | "BSE" | null;
+  
   cmp: number | null;
   presentValue: number | null;
 

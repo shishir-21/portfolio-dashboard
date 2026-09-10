@@ -2,6 +2,42 @@ import XLSX from "xlsx";
 import path from "path";
 import { PortfolioStock } from "../types/portfolio";
 
+
+const stockExchangeMap: Record<
+  string,
+  { symbol: string; exchange: "NSE" | "BSE" }
+> = {
+  "ICICI Bank": { symbol: "ICICIBANK", exchange: "NSE" },
+  "Bajaj Housing": { symbol: "BAJAJHFL", exchange: "NSE" },
+  "Savani Financials": { symbol: "511577", exchange: "BSE" },
+
+  "KPIT Tech": { symbol: "KPITTECH", exchange: "NSE" },
+  "Tata Tech": { symbol: "TATATECH", exchange: "NSE" },
+  "BLS E-Services": { symbol: "BLSE", exchange: "NSE" },
+  "Tanla": { symbol: "TANLA", exchange: "NSE" },
+
+  "Tata Consumer": { symbol: "TATACONSUM", exchange: "NSE" },
+  "Pidilite": { symbol: "PIDILITIND", exchange: "NSE" },
+
+  "Tata Power": { symbol: "TATAPOWER", exchange: "NSE" },
+  "KPI Green": { symbol: "KPIGREEN", exchange: "NSE" },
+  "Suzlon": { symbol: "SUZLON", exchange: "NSE" },
+  "Gensol": { symbol: "GENSOL", exchange: "NSE" },
+
+  "Hariom Pipes": { symbol: "HARIOMPIPE", exchange: "NSE" },
+  "Polycab": { symbol: "POLYCAB", exchange: "NSE" },
+
+  "Clean Science": { symbol: "CLEAN", exchange: "NSE" },
+  "Deepak Nitrite": { symbol: "DEEPAKNTR", exchange: "NSE" },
+  "Fine Organic": { symbol: "FINEORG", exchange: "NSE" },
+  "Gravita": { symbol: "GRAVITA", exchange: "NSE" },
+  "SBI Life": { symbol: "SBILIFE", exchange: "NSE" },
+
+  "Infy": { symbol: "INFY", exchange: "NSE" },
+  "Happeist Mind": { symbol: "HAPPSTMNDS", exchange: "NSE" },
+  "Easemytrip": { symbol: "EASEMYTRIP", exchange: "NSE" },
+};
+
 const excelPath = path.join(
   process.cwd(),
   "data",
@@ -66,6 +102,16 @@ export function readPortfolioExcel(): PortfolioStock[] {
 
     const salePrice = toNumber(row[33]);
 
+    const excelSymbol = toStringValue(row[6]);
+    const mappedStock = stockExchangeMap[particulars];
+
+    const symbol = excelSymbol ?? mappedStock?.symbol ?? null;
+
+    const exchange =
+      excelSymbol !== null
+        ? "NSE"
+        : mappedStock?.exchange ?? null;
+
     stocks.push({
       no,
       name: particulars,
@@ -76,7 +122,9 @@ export function readPortfolioExcel(): PortfolioStock[] {
       investment: toNumber(row[4]),
       portfolioPercent: toNumber(row[5]),
 
-      symbol: toStringValue(row[6]),
+      symbol,
+      exchange,
+      
       cmp: toNumber(row[7]),
       presentValue: toNumber(row[8]),
 
