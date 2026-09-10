@@ -776,3 +776,52 @@ body {
         grid-template-columns: 1fr;
     }
 }
+
+/* Holdings Controls */
+
+.holdings-controls {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 20px 0;
+}
+
+.holdings-search {
+    flex: 1;
+}
+
+.holdings-search input,
+.holdings-sort {
+    width: 100%;
+    height: 44px;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    background: #ffffff;
+    padding: 0 14px;
+    font-size: 14px;
+    color: #111827;
+    outline: none;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.holdings-search input:focus,
+.holdings-sort:focus {
+    border-color: #9ca3af;
+    box-shadow: 0 0 0 3px rgba(156, 163, 175, 0.15);
+}
+
+.holdings-sort {
+    width: 240px;
+    cursor: pointer;
+}
+
+@media (max-width: 768px) {
+    .holdings-controls {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .holdings-sort {
+        width: 100%;
+    }
+}

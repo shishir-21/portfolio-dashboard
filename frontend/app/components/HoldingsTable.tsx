@@ -51,6 +51,8 @@ export default function HoldingsTable({
     const [view, setView] = useState<"holdings" | "sold">("holdings");
     const [selectedSector, setSelectedSector] = useState("All");
     const [selectedStock, setSelectedStock] = useState<PortfolioStock | null>(null);
+    const [searchQuery, setSearchQuery] = useState("");
+    const [sortBy, setSortBy] = useState("default");
 
     const currentPortfolio = useMemo(() => {
         return portfolio.filter((stock) =>
@@ -67,20 +69,48 @@ export default function HoldingsTable({
     }, [currentPortfolio]);
 
     const filteredPortfolio = useMemo(() => {
-        if (selectedSector === "All") {
-            return currentPortfolio;
-        }
+        const query = searchQuery.trim().toLowerCase();
 
-        return currentPortfolio.filter(
-            (stock) => stock.sector === selectedSector
-        );
-    }, [currentPortfolio, selectedSector]);
+        const filtered = currentPortfolio.filter((stock) => {
+            const matchesSector =
+                selectedSector === "All" ||
+                stock.sector === selectedSector;
+
+            const matchesSearch =
+                query === "" ||
+                stock.name.toLowerCase().includes(query) ||
+                stock.symbol?.toLowerCase().includes(query);
+
+            return matchesSector && matchesSearch;
+        });
+
+        return [...filtered].sort((a, b) => {
+            switch (sortBy) {
+                case "investment":
+                    return (b.investment ?? 0) - (a.investment ?? 0);
+
+                case "presentValue":
+                    return (b.presentValue ?? 0) - (a.presentValue ?? 0);
+
+                case "gainLoss":
+                    return (b.gainLoss ?? 0) - (a.gainLoss ?? 0);
+
+                case "return":
+                    return (b.gainLossPercent ?? 0) - (a.gainLossPercent ?? 0);
+
+                default:
+                    return 0;
+            }
+        });
+    }, [currentPortfolio, selectedSector, searchQuery, sortBy]);
 
     const overallSummary = calculateSummary(filteredPortfolio);
 
     const handleViewChange = (newView: "holdings" | "sold") => {
         setView(newView);
         setSelectedSector("All");
+        setSearchQuery("");
+        setSortBy("default");
     };
 
     return (
@@ -156,6 +186,29 @@ export default function HoldingsTable({
                         </button>
                     );
                 })}
+            </div>
+
+            <div className="holdings-controls">
+                <div className="holdings-search">
+                    <input
+                        type="text"
+                        placeholder="Search stocks..."
+                        value={searchQuery}
+                        onChange={(event) => setSearchQuery(event.target.value)}
+                    />
+                </div>
+
+                <select
+                    className="holdings-sort"
+                    value={sortBy}
+                    onChange={(event) => setSortBy(event.target.value)}
+                >
+                    <option value="default">Sort By</option>
+                    <option value="investment">Investment: High to Low</option>
+                    <option value="presentValue">Current Value: High to Low</option>
+                    <option value="gainLoss">Gain/Loss: High to Low</option>
+                    <option value="return">Return: High to Low</option>
+                </select>
             </div>
 
             {/* ALL VIEW */}
