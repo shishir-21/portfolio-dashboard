@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import StockDetails from "./StockDetails";
 
 interface PortfolioStock {
     no: number;
@@ -12,6 +13,34 @@ interface PortfolioStock {
     gainLossPercent: number | null;
     symbol: string | null;
     status: "active" | "sold";
+
+    purchasePrice: number | null;
+    quantity: number | null;
+    cmp: number | null;
+    marketCap: number | null;
+    pe: number | null;
+    latestEarnings: number | null;
+    revenueTTM: number | null;
+    ebitdaTTM: number | null;
+    ebitdaPercent: number | null;
+    pat: number | null;
+    patPercent: number | null;
+    cfoMarch24: number | null;
+    cfo5Years: number | null;
+    freeCashFlow5Years: number | null;
+    debtToEquity: number | null;
+    bookValue: number | null;
+    revenueGrowth: number | null;
+    ebitdaGrowth: number | null;
+    profitGrowth: number | null;
+    marketCapGrowth: number | null;
+    priceToSales: number | null;
+    cfoToEbitda: number | null;
+    cfoToPat: number | null;
+    priceToBook: number | null;
+    stage2: string | null;
+    salePrice: number | null;
+    abhishek: string | null;
 }
 
 export default function HoldingsTable({
@@ -21,6 +50,7 @@ export default function HoldingsTable({
 }) {
     const [view, setView] = useState<"holdings" | "sold">("holdings");
     const [selectedSector, setSelectedSector] = useState("All");
+    const [selectedStock, setSelectedStock] = useState<PortfolioStock | null>(null);
 
     const currentPortfolio = useMemo(() => {
         return portfolio.filter((stock) =>
@@ -141,15 +171,24 @@ export default function HoldingsTable({
                         summary={overallSummary}
                     />
 
-                    <HoldingsDataTable stocks={filteredPortfolio} />
+                    <HoldingsDataTable
+                        stocks={filteredPortfolio}
+                        onStockClick={setSelectedStock}
+                    />
                 </div>
             ) : (
                 /* SECTOR VIEW */
                 <SectorGroup
                     sector={selectedSector}
                     stocks={filteredPortfolio}
+                    onStockClick={setSelectedStock}
                 />
             )}
+
+            <StockDetails
+                stock={selectedStock}
+                onClose={() => setSelectedStock(null)}
+            />
         </section>
     );
 }
@@ -223,9 +262,11 @@ function SummaryBanner({
 function SectorGroup({
     sector,
     stocks,
+    onStockClick,
 }: {
     sector: string;
     stocks: PortfolioStock[];
+    onStockClick: (stock: PortfolioStock) => void;
 }) {
     const [isOpen, setIsOpen] = useState(true);
 
@@ -296,15 +337,22 @@ function SectorGroup({
                 </div>
             </button>
 
-            {isOpen && <HoldingsDataTable stocks={stocks} />}
+            {isOpen && (
+                <HoldingsDataTable
+                    stocks={stocks}
+                    onStockClick={onStockClick}
+                />
+            )}
         </div>
     );
 }
 
 function HoldingsDataTable({
     stocks,
+    onStockClick,
 }: {
     stocks: PortfolioStock[];
+    onStockClick: (stock: PortfolioStock) => void;
 }) {
     return (
         <div className="sector-table-wrapper">
@@ -323,15 +371,21 @@ function HoldingsDataTable({
                     {stocks.map((stock) => (
                         <tr key={`${stock.name}-${stock.no}`}>
                             <td>
-                                <div className="stock-name">
-                                    {stock.name}
-                                </div>
+                                <button
+                                    type="button"
+                                    className="stock-name-button"
+                                    onClick={() => onStockClick(stock)}
+                                >
+                                    <div className="stock-name">
+                                        {stock.name}
+                                    </div>
 
-                                <div className="stock-symbol">
-                                    {stock.symbol
-                                        ? `NSE/BSE: ${stock.symbol}`
-                                        : "Ticker unavailable"}
-                                </div>
+                                    <div className="stock-symbol">
+                                        {stock.symbol
+                                            ? `NSE/BSE: ${stock.symbol}`
+                                            : "Ticker unavailable"}
+                                    </div>
+                                </button>
                             </td>
 
                             <td>
