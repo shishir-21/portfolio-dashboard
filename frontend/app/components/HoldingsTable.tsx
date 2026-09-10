@@ -3,6 +3,8 @@
 import { useMemo, useState, useEffect } from "react";
 import StockDetails from "./StockDetails";
 
+
+
 interface PortfolioStock {
     no: number;
     name: string;
@@ -53,6 +55,20 @@ export default function HoldingsTable({
     const [selectedStock, setSelectedStock] = useState<PortfolioStock | null>(null);
     const [searchQuery, setSearchQuery] = useState("");
     const [sortBy, setSortBy] = useState("default");
+
+    useEffect(() => {
+        setSelectedStock((current) => {
+            if (!current) return null;
+
+            return (
+                portfolio.find(
+                    (stock) =>
+                        stock.name === current.name &&
+                        stock.no === current.no
+                ) ?? current
+            );
+        });
+    }, [portfolio]);
 
     const currentPortfolio = useMemo(() => {
         return portfolio.filter((stock) =>
@@ -483,10 +499,7 @@ function HoldingsDataTable({
                                 }
                             >
                                 {stock.gainLossPercent !== null
-                                    ? `${stock.gainLossPercent >= 0 ? "+" : ""
-                                    }${(
-                                        stock.gainLossPercent * 100
-                                    ).toFixed(2)}%`
+                                    ? `${stock.gainLossPercent >= 0 ? "+" : ""}${stock.gainLossPercent.toFixed(2)}%`
                                     : "-"}
                             </td>
                         </tr>

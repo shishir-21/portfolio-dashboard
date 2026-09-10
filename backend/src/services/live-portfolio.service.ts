@@ -3,8 +3,15 @@ import { fetchYahooCMP } from "./yahoo.service";
 import { fetchGoogleFinanceData } from "./google-finance.service";
 import { PortfolioStock } from "../types/portfolio";
 
-export async function getLivePortfolio(
-    includeGoogleFinance = false
+const LIVE_CACHE_TTL_MS = 15 * 1000;
+
+let cachedPortfolio: PortfolioStock[] | null = null;
+let cacheExpiresAt = 0;
+
+let inFlightRequest: Promise<PortfolioStock[]> | null = null;
+
+async function fetchLivePortfolio(
+    includeGoogleFinance: boolean
 ): Promise<PortfolioStock[]> {
     const portfolio = readPortfolioExcel();
 
@@ -35,38 +42,26 @@ export async function getLivePortfolio(
                     googlePromise,
                 ]);
 
-            // Use Yahoo CMP when available.
-            // Otherwise, use the CMP from Excel.
             const effectiveCMP =
-                liveCMP !== null
-                    ? liveCMP
-                    : stock.cmp;
+                liveCMP !== null ? liveCMP : stock.cmp;
 
             let updatedStock: PortfolioStock = {
                 ...stock,
                 cmpSource:
-                    liveCMP !== null
-                        ? "yahoo"
-                        : "excel",
+                    liveCMP !== null ? "yahoo" : "excel",
             };
 
-            // Recalculate portfolio values using
-            // live Yahoo CMP or Excel fallback CMP.
             if (effectiveCMP !== null) {
                 const presentValue =
-                    effectiveCMP *
-                    (stock.quantity ?? 0);
+                    effectiveCMP * (stock.quantity ?? 0);
 
                 const gainLoss =
-                    presentValue -
-                    (stock.investment ?? 0);
+                    presentValue - (stock.investment ?? 0);
 
                 const gainLossPercent =
                     stock.investment &&
                     stock.investment > 0
-                        ? (gainLoss /
-                              stock.investment) *
-                          100
+                        ? (gainLoss / stock.investment) * 100
                         : null;
 
                 updatedStock = {
@@ -78,15 +73,12 @@ export async function getLivePortfolio(
                 };
             }
 
-            // Google Finance is only fetched when requested.
             if (googleFinanceData.pe !== null) {
-                updatedStock.pe =
-                    googleFinanceData.pe;
+                updatedStock.pe = googleFinanceData.pe;
             }
 
             if (
-                googleFinanceData.latestEarnings !==
-                null
+                googleFinanceData.latestEarnings !== null
             ) {
                 updatedStock.latestEarnings =
                     googleFinanceData.latestEarnings;
@@ -95,4 +87,37 @@ export async function getLivePortfolio(
             return updatedStock;
         })
     );
+}
+
+export async function getLivePortfolio(
+    includeGoogleFinance = false
+): Promise<PortfolioStock[]> {
+    const now = Date.now();
+
+    if (
+        cachedPortfolio &&
+        cacheExpiresAt > now
+    ) {
+        return cachedPortfolio;
+    }
+
+    if (inFlightRequest) {
+        return inFlightRequest;
+    }
+
+    inFlightRequest = fetchLivePortfolio(
+        includeGoogleFinance
+    )
+        .then((portfolio) => {
+            cachedPortfolio = portfolio;
+            cacheExpiresAt =
+                Date.now() + LIVE_CACHE_TTL_MS;
+
+            return portfolio;
+        })
+        .finally(() => {
+            inFlightRequest = null;
+        });
+
+    return inFlightRequest;
 }
