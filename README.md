@@ -107,30 +107,36 @@ Portfolio Controller
         v
 Live Portfolio Service
         |
-        +----------------------+----------------------+
-        |                      |                      |
-        v                      v                      v
- Excel Service          Yahoo Service       Google Finance Service
-        |                      |                      |
-        v                      v                      v
- Excel Data             Yahoo Finance        Google Finance
-                               |                      |
-                              CMP                  P/E + EPS
-                               |                      |
-        +----------------------+----------------------+
-        |
-        v
-Live Portfolio Service
-        |
-        v
-Present Value / Gain-Loss Calculations
-        |
-        v
-REST API Response
-        |
-        v
-Next.js Frontend
-        |
-        v
-Dashboard
+        +--------------------+
+        |                    |
+        v                    v
+Excel Service          Yahoo Service
+        |                    |
+        |                    v
+        |               Yahoo Finance
+        |                    |
+        |                   CMP
+        |                    |
+        +----------+---------+
+                   |
+                   v
+        Google Finance Service
+                   |
+                   v
+             Google Finance
+                   |
+             P/E + EPS
+                   |
+                   v
+          Live Portfolio Service
+                   |
+                   v
+          Present Value / Gain
+             Calculations
+                   |
+                   v
+              REST API
+                   |
+                   v
+             Next.js UI
              
