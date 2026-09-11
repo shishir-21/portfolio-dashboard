@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import HoldingsTable from "./components/HoldingsTable";
+import StockDetails from "./components/StockDetails";
 import {
   getPortfolioSummary,
   getSectorSummary,
@@ -94,6 +95,29 @@ export default function Home() {
   const [error, setError] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] =
     useState<Date | null>(null);
+
+  const [selectedStock, setSelectedStock] = useState<PortfolioStock | null>(null);
+
+  useEffect(() => {
+    setSelectedStock((current) => {
+      if (!current) return null;
+
+      return (
+        portfolio.find(
+          (stock) =>
+            stock.name === current.name &&
+            stock.no === current.no
+        ) ?? current
+      );
+    });
+  }, [portfolio]);
+
+  const handlePerformanceClick = (stockName: string) => {
+    const stock = portfolio.find((s) => s.name === stockName);
+    if (stock) {
+      setSelectedStock(stock);
+    }
+  };
 
   const loadDashboard = useCallback(
     async (showLoading = false) => {
@@ -327,13 +351,23 @@ export default function Home() {
               {performance.topGainers.map(
                 (stock) => (
                   <div
-                    className="performance-row"
+                    className="performance-row hover-clickable"
+                    style={{ cursor: "pointer" }}
+                    role="button"
+                    tabIndex={0}
                     key={stock.name}
+                    onClick={() => handlePerformanceClick(stock.name)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        handlePerformanceClick(stock.name);
+                      }
+                    }}
                   >
                     <div>
-                      <p className="performance-name">
+                      <strong className="performance-stock-name">
                         {stock.name}
-                      </p>
+                      </strong>
 
                       <p className="performance-gain">
                         +₹
@@ -372,13 +406,23 @@ export default function Home() {
               {performance.topLosers.map(
                 (stock) => (
                   <div
-                    className="performance-row"
+                    className="performance-row hover-clickable"
+                    style={{ cursor: "pointer" }}
+                    role="button"
+                    tabIndex={0}
                     key={stock.name}
+                    onClick={() => handlePerformanceClick(stock.name)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        handlePerformanceClick(stock.name);
+                      }
+                    }}
                   >
                     <div>
-                      <p className="performance-name">
+                      <strong className="performance-stock-name">
                         {stock.name}
-                      </p>
+                      </strong>
 
                       <p className="performance-loss">
                         ₹
@@ -405,7 +449,15 @@ export default function Home() {
         </div>
       </section>
 
-      <HoldingsTable portfolio={portfolio} />
+      <HoldingsTable 
+        portfolio={portfolio} 
+        onStockClick={setSelectedStock} 
+      />
+
+      <StockDetails
+        stock={selectedStock}
+        onClose={() => setSelectedStock(null)}
+      />
     </main>
   );
 }

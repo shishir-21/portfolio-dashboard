@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo, useState, useEffect } from "react";
-import StockDetails from "./StockDetails";
 
 
 
@@ -47,28 +46,15 @@ interface PortfolioStock {
 
 export default function HoldingsTable({
     portfolio,
+    onStockClick,
 }: {
     portfolio: PortfolioStock[];
+    onStockClick: (stock: PortfolioStock) => void;
 }) {
     const [view, setView] = useState<"holdings" | "sold">("holdings");
     const [selectedSector, setSelectedSector] = useState("All");
-    const [selectedStock, setSelectedStock] = useState<PortfolioStock | null>(null);
     const [searchQuery, setSearchQuery] = useState("");
     const [sortBy, setSortBy] = useState("default");
-
-    useEffect(() => {
-        setSelectedStock((current) => {
-            if (!current) return null;
-
-            return (
-                portfolio.find(
-                    (stock) =>
-                        stock.name === current.name &&
-                        stock.no === current.no
-                ) ?? current
-            );
-        });
-    }, [portfolio]);
 
     const currentPortfolio = useMemo(() => {
         return portfolio.filter((stock) =>
@@ -242,7 +228,7 @@ export default function HoldingsTable({
 
                     <HoldingsDataTable
                         stocks={filteredPortfolio}
-                        onStockClick={setSelectedStock}
+                        onStockClick={onStockClick}
                     />
                 </div>
             ) : (
@@ -250,14 +236,9 @@ export default function HoldingsTable({
                 <SectorGroup
                     sector={selectedSector}
                     stocks={filteredPortfolio}
-                    onStockClick={setSelectedStock}
+                    onStockClick={onStockClick}
                 />
             )}
-
-            <StockDetails
-                stock={selectedStock}
-                onClose={() => setSelectedStock(null)}
-            />
         </section>
     );
 }

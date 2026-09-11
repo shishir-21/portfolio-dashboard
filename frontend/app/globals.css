@@ -863,3 +863,11 @@ body {
     min-width: 90px;
     text-align: center;
 }
+
+.performance-stock-name {
+  transition: text-decoration 0.15s ease;
+}
+
+.performance-row:hover .performance-stock-name {
+  text-decoration: underline;
+}
