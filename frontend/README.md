@@ -1,36 +1,136 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Portfolio Dashboard
 
-## Getting Started
+A full-stack portfolio dashboard built using Next.js, TypeScript, Tailwind CSS, Node.js, and Express.
 
-First, run the development server:
+The application displays portfolio holdings along with current market prices, portfolio value, gain/loss, sector-wise performance, and stock fundamentals.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## Tech Stack
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Frontend
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- Next.js
+- React
+- TypeScript
+- Tailwind CSS
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### Backend
 
-## Learn More
+- Node.js
+- Express.js
+- TypeScript
+- Axios
+- ExcelJS
 
-To learn more about Next.js, take a look at the following resources:
+### Data Sources
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- Yahoo Finance - Current Market Price (CMP)
+- Google Finance - P/E Ratio and Latest Earnings (EPS)
+- Excel - Portfolio holdings and investment data
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+---
 
-## Deploy on Vercel
+## Project Structure
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+text
+portfolio-dashboard/
+│
+├── backend/
+│   ├── src/
+│   │   ├── controllers/
+│   │   ├── routes/
+│   │   ├── services/
+│   │   ├── types/
+│   │   └── server.ts
+│   │
+│   ├── data/
+│   │   ├── portfolio.xlsx
+│   │   └── ...
+│   │
+│   ├── package.json
+│   └── tsconfig.json
+│
+├── frontend/
+│   ├── app/
+│   │   ├── components/
+│   │   │   ├── HoldingsTable.tsx
+│   │   │   ├── StockDetails.tsx
+│   │   │   └── ...
+│   │   │
+│   │   ├── globals.css
+│   │   ├── layout.tsx
+│   │   └── page.tsx
+│   │
+│   ├── package.json
+│   └── tsconfig.json
+│
+└── README.md
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+
+## How the Data Works
+
+
+                    Excel Portfolio Data
+                            |
+                            v
+                         Backend
+                            |
+              +-------------+-------------+
+              |                           |
+              v                           v
+        Yahoo Finance              Google Finance
+              |                           |
+             CMP                    P/E Ratio + EPS
+              |                           |
+              +-------------+-------------+
+                            |
+                            v
+                   Portfolio Calculations
+                            |
+                            v
+                         REST API
+                            |
+                            v
+                    Next.js Frontend
+                            |
+                            v
+                        Dashboard
+
+
+## Complete Backend Data Flow
+
+GET /api/portfolio
+        |
+        v
+Portfolio Controller
+        |
+        v
+Live Portfolio Service
+        |
+        +----------------------+----------------------+
+        |                      |                      |
+        v                      v                      v
+ Excel Service          Yahoo Service       Google Finance Service
+        |                      |                      |
+        v                      v                      v
+ Excel Data             Yahoo Finance        Google Finance
+                               |                      |
+                              CMP                  P/E + EPS
+                               |                      |
+        +----------------------+----------------------+
+        |
+        v
+Live Portfolio Service
+        |
+        v
+Present Value / Gain-Loss Calculations
+        |
+        v
+REST API Response
+        |
+        v
+Next.js Frontend
+        |
+        v
+Dashboard
+             
