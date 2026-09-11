@@ -1,19 +1,46 @@
 # Portfolio Dashboard
 
-A full-stack portfolio dashboard built using Next.js, TypeScript, Tailwind CSS, Node.js, and Express.
+A full-stack portfolio dashboard built with Next.js, React, TypeScript, Tailwind CSS, Node.js, and Express.
 
-The application displays portfolio holdings along with current market prices, portfolio value, gain/loss, sector-wise performance, and stock fundamentals.
+The application reads portfolio holdings and investment information from an Excel file and combines it with live market data from Yahoo Finance and stock fundamentals from Google Finance.
 
-## Tech Stack
+The dashboard shows current market price, present value, gain/loss, portfolio allocation, sector performance, top gainers, top losers, and additional stock details.
 
-### Frontend
+## Live Application
+
+Frontend:
+
+https://portfolio-dashboard-o3ohmluz7-shishir-21s-projects.vercel.app
+
+Backend API:
+
+https://portfolio-dashboard-backend-lv03.onrender.com
+
+The frontend is deployed on Vercel and the backend is deployed on Render.
+
+---
+
+# Tech Stack
+
+## Frontend
 
 - Next.js
 - React
 - TypeScript
 - Tailwind CSS
+- JavaScript/TypeScript Fetch API
 
-### Backend
+### Why Next.js?
+
+Next.js is used to build the frontend dashboard and manage the React application structure.
+
+The main dashboard is implemented inside the `app` directory.
+
+The frontend is responsible for displaying the portfolio data received from the backend and refreshing the dashboard periodically.
+
+---
+
+## Backend
 
 - Node.js
 - Express.js
@@ -21,122 +48,66 @@ The application displays portfolio holdings along with current market prices, po
 - Axios
 - ExcelJS
 
-### Data Sources
+### Why Node.js and Express?
 
-- Yahoo Finance - Current Market Price (CMP)
-- Google Finance - P/E Ratio and Latest Earnings (EPS)
-- Excel - Portfolio holdings and investment data
+Node.js is used as the backend runtime and Express is used to create the REST API.
+
+The backend handles:
+
+- Reading portfolio data
+- Fetching external market data
+- Combining data from different sources
+- Portfolio calculations
+- Error handling
+- API responses
+- Caching
 
 ---
 
-## Project Structure
+## Axios
 
-text
-portfolio-dashboard/
-│
-├── backend/
-│   ├── src/
-│   │   ├── controllers/
-│   │   ├── routes/
-│   │   ├── services/
-│   │   ├── types/
-│   │   └── server.ts
-│   │
-│   ├── data/
-│   │   ├── portfolio.xlsx
-│   │   └── ...
-│   │
-│   ├── package.json
-│   └── tsconfig.json
-│
-├── frontend/
-│   ├── app/
-│   │   ├── components/
-│   │   │   ├── HoldingsTable.tsx
-│   │   │   ├── StockDetails.tsx
-│   │   │   └── ...
-│   │   │
-│   │   ├── globals.css
-│   │   ├── layout.tsx
-│   │   └── page.tsx
-│   │
-│   ├── package.json
-│   └── tsconfig.json
-│
-└── README.md
+Axios is used in the backend for making HTTP requests to external services where required.
 
+It acts as the HTTP client between the backend and external services.
 
+Instead of making these external requests directly from the frontend, the backend handles them and sends the processed data to the frontend.
 
-## How the Data Works
+This keeps external data fetching inside the backend and avoids exposing external service details to the client.
 
+---
 
-                    Excel Portfolio Data
-                            |
-                            v
-                         Backend
-                            |
-              +-------------+-------------+
-              |                           |
-              v                           v
-        Yahoo Finance              Google Finance
-              |                           |
-             CMP                    P/E Ratio + EPS
-              |                           |
-              +-------------+-------------+
-                            |
-                            v
-                   Portfolio Calculations
-                            |
-                            v
-                         REST API
-                            |
-                            v
-                    Next.js Frontend
-                            |
-                            v
-                        Dashboard
+## ExcelJS
 
+ExcelJS is used to read the portfolio Excel file on the backend.
 
-## Complete Backend Data Flow
+The Excel file contains information such as:
 
-GET /api/portfolio
-        |
-        v
-Portfolio Controller
-        |
-        v
-Live Portfolio Service
-        |
-        +--------------------+
-        |                    |
-        v                    v
-Excel Service          Yahoo Service
-        |                    |
-        |                    v
-        |               Yahoo Finance
-        |                    |
-        |                   CMP
-        |                    |
-        +----------+---------+
-                   |
-                   v
-        Google Finance Service
-                   |
-                   v
-             Google Finance
-                   |
-             P/E + EPS
-                   |
-                   v
-          Live Portfolio Service
-                   |
-                   v
-          Present Value / Gain
-             Calculations
-                   |
-                   v
-              REST API
-                   |
-                   v
-             Next.js UI
-             
+- Stock name
+- Purchase price
+- Quantity
+- Investment amount
+- Portfolio percentage
+- Stock symbol
+- Sector
+- Other portfolio and financial information
+
+The backend reads this data and converts it into a structured format that can be used by the rest of the application.
+
+---
+
+## Yahoo Finance
+
+Yahoo Finance is used to get the Current Market Price (CMP).
+
+The backend sends a request for the required stock symbol and reads the current market price from the response.
+
+For NSE stocks, Yahoo Finance symbols use the `.NS` suffix.
+
+For BSE stocks, Yahoo Finance symbols use the `.BO` suffix.
+
+There is also a symbol mapping for stocks where the symbol used in the portfolio differs from the Yahoo Finance symbol.
+
+For example:
+
+```text
+LTIM -> LTM
