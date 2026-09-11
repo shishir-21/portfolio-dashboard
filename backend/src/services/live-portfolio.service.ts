@@ -7,8 +7,10 @@ const LIVE_CACHE_TTL_MS = 15 * 1000;
 
 let cachedPortfolio: PortfolioStock[] | null = null;
 let cacheExpiresAt = 0;
+let cacheIncludesGoogleFinance = false;
 
-let inFlightRequest: Promise<PortfolioStock[]> | null = null;
+let inFlightRequestGF: Promise<PortfolioStock[]> | null = null;
+let inFlightRequestBasic: Promise<PortfolioStock[]> | null = null;
 
 async function fetchLivePortfolio(
     includeGoogleFinance: boolean
@@ -42,13 +44,12 @@ async function fetchLivePortfolio(
                     googlePromise,
                 ]);
 
-            const effectiveCMP =
-                liveCMP !== null ? liveCMP : stock.cmp;
+            const effectiveCMP = liveCMP;
 
             let updatedStock: PortfolioStock = {
                 ...stock,
                 cmpSource:
-                    liveCMP !== null ? "yahoo" : "excel",
+                    liveCMP !== null ? "yahoo" : "error",
             };
 
             if (effectiveCMP !== null) {
@@ -70,6 +71,14 @@ async function fetchLivePortfolio(
                     presentValue,
                     gainLoss,
                     gainLossPercent,
+                };
+            } else {
+                updatedStock = {
+                    ...updatedStock,
+                    cmp: null,
+                    presentValue: null,
+                    gainLoss: null,
+                    gainLossPercent: null,
                 };
             }
 
@@ -96,28 +105,44 @@ export async function getLivePortfolio(
 
     if (
         cachedPortfolio &&
-        cacheExpiresAt > now
+        cacheExpiresAt > now &&
+        (!includeGoogleFinance || cacheIncludesGoogleFinance)
     ) {
         return cachedPortfolio;
     }
 
-    if (inFlightRequest) {
-        return inFlightRequest;
+    if (includeGoogleFinance && inFlightRequestGF) {
+        return inFlightRequestGF;
+    }
+    
+    if (!includeGoogleFinance && inFlightRequestBasic) {
+        return inFlightRequestBasic;
     }
 
-    inFlightRequest = fetchLivePortfolio(
-        includeGoogleFinance
-    )
-        .then((portfolio) => {
+    const promise = fetchLivePortfolio(includeGoogleFinance).then((portfolio) => {
+        // Only update cache if it's an upgrade (GF) or if cache is expired
+        if (includeGoogleFinance || cacheExpiresAt <= Date.now()) {
             cachedPortfolio = portfolio;
-            cacheExpiresAt =
-                Date.now() + LIVE_CACHE_TTL_MS;
+            cacheExpiresAt = Date.now() + LIVE_CACHE_TTL_MS;
+            cacheIncludesGoogleFinance = includeGoogleFinance;
+        }
 
-            return portfolio;
-        })
-        .finally(() => {
-            inFlightRequest = null;
-        });
+        return portfolio;
+    });
 
-    return inFlightRequest;
+    if (includeGoogleFinance) {
+        inFlightRequestGF = promise;
+        promise.then(
+            () => { inFlightRequestGF = null; },
+            () => { inFlightRequestGF = null; }
+        );
+    } else {
+        inFlightRequestBasic = promise;
+        promise.then(
+            () => { inFlightRequestBasic = null; },
+            () => { inFlightRequestBasic = null; }
+        );
+    }
+
+    return promise;
 }

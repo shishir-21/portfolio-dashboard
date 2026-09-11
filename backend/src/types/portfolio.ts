@@ -12,7 +12,7 @@ export interface PortfolioStock {
   exchange: "NSE" | "BSE" | null;
 
   cmp: number | null;
-  cmpSource?: "yahoo" | "excel";
+  cmpSource?: "yahoo" | "excel" | "error";
   presentValue: number | null;
 
   gainLoss: number | null;
